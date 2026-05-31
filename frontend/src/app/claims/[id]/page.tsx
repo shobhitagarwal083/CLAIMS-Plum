@@ -62,7 +62,10 @@ export default function ClaimDetail() {
 
       intervalId = setInterval(() => {
         setClaim(prev => {
-          if (prev && (prev.status === 'pending' || prev.status === 'processing')) {
+          if (!prev) {
+            return prev; // Initial fetch hasn't finished yet, don't clear interval
+          }
+          if (prev.status === 'pending' || prev.status === 'processing') {
             pollClaimDetails();
           } else {
             clearInterval(intervalId);
