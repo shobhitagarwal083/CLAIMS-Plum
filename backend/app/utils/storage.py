@@ -25,7 +25,7 @@ def get_s3_client():
     }
     if settings.s3_endpoint_url:
         client_kwargs["endpoint_url"] = settings.s3_endpoint_url
-        client_kwargs["config"] = Config(signature_version="s3v4")
+        client_kwargs["config"] = Config(signature_version="s3v4", s3={'addressing_style': 'path'})
         
     try:
         return boto3.client("s3", **client_kwargs)
