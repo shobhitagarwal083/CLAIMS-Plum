@@ -1,0 +1,56 @@
+# ═══════════════════════════════════════════════════════════════════════
+# Production / Cloud Docker Compose
+# ═══════════════════════════════════════════════════════════════════════
+#
+# Use this file when connecting to a CLOUD database (e.g. Supabase).
+# No local PostgreSQL container is provisioned — the DATABASE_URL in
+# backend/.env must point to the remote Supabase (or other) instance.
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml up --build -d
+#
+# Prerequisites:
+#   - Set DATABASE_URL in backend/.env to your Supabase connection string
+#   - Set REDIS_URL if using a cloud Redis (Upstash, etc.), otherwise
+#     the local Redis container below will be used automatically
+# ═══════════════════════════════════════════════════════════════════════
+
+services:
+  # ── Redis (Broker & Lock Manager) ──────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+  # ── FastAPI Web Server ─────────────────────────────────────────────
+  web:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=production
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  # ── Celery Background Worker ───────────────────────────────────────
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=production
+    env_file:
+      - ./backend/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+    command: python -m celery -A app.tasks.celery_app worker --loglevel=info

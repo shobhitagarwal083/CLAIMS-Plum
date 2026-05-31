@@ -59,23 +59,42 @@ A production-grade, multi-agent health insurance claims adjudication platform wi
 *   Docker & Docker Compose
 *   Python (3.11 or 3.12 recommended - *only required if running locally without Docker*)
 
-### ⚡ Method A: Containerized Setup (Recommended)
-You can launch the entire backend stack (FastAPI server, Celery worker, PostgreSQL database, and Redis broker) in fully containerized mode with **a single command**:
+### ⚡ Method A: Fully Local Containerized Setup (Recommended for Quick Start)
+Launches the entire stack including a **local PostgreSQL database** — no external accounts needed:
 
 1. Create a `.env` configuration file in `backend/`:
    ```bash
    cp backend/.env.example backend/.env
    ```
-2. Configure credentials in `backend/.env` (e.g., AI API keys, optional S3/Supabase keys).
-3. From the root directory, start the Docker Compose services:
+2. Configure AI credentials in `backend/.env` (e.g., `GOOGLE_API_KEY`). Leave `DATABASE_URL` as default.
+3. From the root directory, start all services:
    ```bash
    docker compose up --build -d
    ```
-This boots all backend services with **hot-reloading enabled**. Any local edits you make to the backend code will instantly reflect inside the containers!
+This boots **Postgres + Redis + FastAPI + Celery Worker** with hot-reloading enabled. Any local code edits instantly reflect inside the containers!
 
 ---
 
-### 🪵 Method B: Local Python Environment Setup
+### ☁️ Method B: Cloud Database Setup (Supabase / Production)
+If you have a **Supabase** (or other cloud PostgreSQL) account and want to use it instead of a local database:
+
+1. Create a `.env` configuration file in `backend/`:
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+2. In `backend/.env`, set `DATABASE_URL` to your Supabase connection string:
+   ```env
+   DATABASE_URL=postgresql+asyncpg://postgres:<password>@db.<project-id>.supabase.co:5432/postgres
+   ```
+3. Use the **production compose file** which skips the local Postgres container:
+   ```bash
+   docker compose -f docker-compose.prod.yml up --build -d
+   ```
+This boots only **Redis + FastAPI + Celery Worker** — the database is served by Supabase in the cloud.
+
+---
+
+### 🪵 Method C: Local Python Environment Setup
 If you prefer running the Python servers directly on your machine instead of Docker:
 
 1. **Start Database & Broker Setup (Docker)**
@@ -117,7 +136,6 @@ cd frontend
 npm install
 npm run dev -- --port 3000
 ```
-Open `http://localhost:3000` in your web browser.
 Open `http://localhost:3000` in your web browser.
 
 ---
