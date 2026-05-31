@@ -170,20 +170,22 @@ async def run_async_process_claim(claim_id: str, request_data: dict[str, Any]):
                     output.decision is not None
                     and output.decision.value == "MANUAL_REVIEW"
                 )
+                output_json = output.model_dump(mode='json')
+                
                 record.status = "awaiting_review" if is_manual_review else "completed"
                 record.decision = output.decision.value if output.decision else None
                 record.approved_amount = output.approved_amount
                 record.confidence_score = output.confidence_score
                 record.rejection_reasons = output.rejection_reasons
                 record.decision_reasons = output.decision_reasons
-                record.amount_breakdown = output.amount_breakdown.model_dump(mode='json') if output.amount_breakdown else None
+                record.amount_breakdown = output_json.get('amount_breakdown')
                 record.document_issues = output.document_issues
                 record.fraud_signals = output.fraud_signals
                 record.fraud_score = output.fraud_score
                 record.degraded_components = output.degraded_components
                 record.is_document_error = output.is_document_error
                 record.manual_review_recommended = output.manual_review_recommended
-                record.execution_trace = output.execution_trace
+                record.execution_trace = output_json.get('execution_trace', [])
                 record.processing_time_ms = output.processing_time_ms
                 # Decision Gate fields
                 record.pre_review_decision = output.pre_review_decision
