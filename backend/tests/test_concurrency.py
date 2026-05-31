@@ -78,11 +78,18 @@ async def test_concurrent_worker_processing_acquires_lock(db_session):
     # Patch the get_session_factory inside worker to return our in-memory SQLite session
     mock_session_factory = MagicMock(return_value=db_session)
 
+    from app.models.claim import ClaimDecisionOutput, ClaimDecision
+    from decimal import Decimal
+
     # We mock PipelineExecutor to avoid actually calling LLMs or rules engine during this concurrency test
     mock_executor = MagicMock()
-    mock_executor.execute = AsyncMock(side_effect=lambda req: MagicMock(
-        decision=MagicMock(value="APPROVED"),
-        approved_amount=1500.0,
+    mock_executor.execute = AsyncMock(return_value=ClaimDecisionOutput(
+        claim_id=claim_id_1,
+        member_id="EMP001",
+        policy_id="PLUM_GHI_2024",
+        claim_category="CONSULTATION",
+        decision=ClaimDecision.APPROVED,
+        approved_amount=Decimal("1500.0"),
         confidence_score=0.9,
         rejection_reasons=[],
         decision_reasons=["Approved"],
@@ -96,7 +103,7 @@ async def test_concurrent_worker_processing_acquires_lock(db_session):
         execution_trace=[],
         processing_time_ms=10,
         pre_review_decision="APPROVED",
-        pre_review_approved_amount=1500.0,
+        pre_review_approved_amount=Decimal("1500.0"),
     ))
 
     # We will let them execute concurrently.
