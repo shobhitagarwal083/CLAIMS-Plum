@@ -36,7 +36,7 @@ export const claimsApi = {
   },
 
   async getClaim(id: string): Promise<ClaimDecisionOutput> {
-    return request<ClaimDecisionOutput>(`/api/claims/${id}`);
+    return request<ClaimDecisionOutput>(`/api/claims/${id}?_t=${Date.now()}`);
   },
 
   async submitClaim(claim: ClaimSubmissionRequest, idempotencyKey?: string): Promise<ClaimDecisionOutput> {
