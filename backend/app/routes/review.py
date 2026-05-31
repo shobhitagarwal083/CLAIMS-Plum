@@ -189,10 +189,11 @@ async def submit_review_action(
         claim.status = "completed"
         # Update amount_breakdown if present
         if claim.amount_breakdown and isinstance(claim.amount_breakdown, dict):
-            claim.amount_breakdown = {
+            from fastapi.encoders import jsonable_encoder
+            claim.amount_breakdown = jsonable_encoder({
                 **claim.amount_breakdown,
                 "approved_amount": app_amt,
-            }
+            })
         # Append review note to decision reasons
         existing_reasons = claim.decision_reasons or []
         amt_str = f"with modified amount of ₹{app_amt}" if is_override else f"with calculated amount of ₹{app_amt}"
@@ -215,10 +216,11 @@ async def submit_review_action(
         claim.status = "completed"
         # Update amount_breakdown if present
         if claim.amount_breakdown and isinstance(claim.amount_breakdown, dict):
-            claim.amount_breakdown = {
+            from fastapi.encoders import jsonable_encoder
+            claim.amount_breakdown = jsonable_encoder({
                 **claim.amount_breakdown,
                 "approved_amount": 0.0,
-            }
+            })
         # Append denial reason
         existing_reasons = claim.decision_reasons or []
         existing_reasons.append(
