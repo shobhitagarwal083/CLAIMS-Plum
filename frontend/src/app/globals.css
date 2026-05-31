@@ -1,0 +1,279 @@
+:root {
+  /* Plum Brand Color Tokens */
+  --plum-promise: #FAF6F0; /* Warm off-white sand background */
+  --plum-berry: #3F0E2D;   /* Dark purple/plum text & core branding */
+  --plum-berry-light: rgba(63, 14, 45, 0.06);
+  --plum-berry-hover: #56183F;
+  --plum-mint: #00CC83;    /* Mint green accent for success & approvals */
+  --plum-mint-light: #EBFBF5;
+  --plum-mint-dark: #009962;
+  --plum-rose: #FF4D77;    /* Soft pink/rose highlights */
+  --plum-gold: #D4AF37;    /* Warm gold accent */
+  --plum-coral: #FA5A60;   /* Signature Plum Coral/Red for primary CTA */
+  --plum-coral-hover: #E0484E;
+
+  /* Neutral tones */
+  --text-primary: #3F0E2D;
+  --text-secondary: #5C4B54;
+  --text-muted: #8E7A85;
+  --border-light: rgba(63, 14, 45, 0.08);
+  --card-bg: #FFFFFF;
+  --card-shadow: 0 12px 36px -12px rgba(63, 14, 45, 0.07), 0 4px 12px -4px rgba(63, 14, 45, 0.03);
+  --card-shadow-hover: 0 20px 48px -12px rgba(63, 14, 45, 0.12), 0 8px 24px -4px rgba(63, 14, 45, 0.06);
+
+  /* Fonts (Assigned dynamically in layout.tsx) */
+  --font-serif: var(--font-bitter), 'Bitter', Georgia, serif;
+  --font-sans: var(--font-inter), 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), 'JetBrains Mono', Courier, monospace;
+
+  /* Standard spacing & border radiuses */
+  --radius-lg: 12px;       /* Reduced from 18px to match Plum's cleaner rounded corners */
+  --radius-md: 8px;        /* Reduced from 12px */
+  --radius-sm: 4px;        /* Reduced from 8px */
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Base Resets */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  background: var(--plum-promise);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Typographic Defaults */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  color: var(--plum-berry);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+p {
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: var(--transition-smooth);
+}
+
+/* Premium Layout Elements */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* Beautiful Interactive Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--plum-promise);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--text-muted);
+  border-radius: 10px;
+  border: 3px solid var(--plum-promise);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--plum-berry);
+}
+
+/* Common Premium Components */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--plum-coral);
+  color: #FFFFFF;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 12px 24px;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(250, 90, 96, 0.15);
+  transition: var(--transition-smooth);
+}
+.btn-primary:hover {
+  background: var(--plum-coral-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(250, 90, 96, 0.25);
+}
+.btn-primary:active {
+  transform: translateY(1px);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: var(--plum-berry);
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 11px 22px;
+  border: 1.5px solid var(--plum-berry);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.btn-secondary:hover {
+  background: var(--plum-berry-light);
+  transform: translateY(-1px);
+}
+.btn-secondary:active {
+  transform: translateY(1px);
+}
+
+.btn-secondary-light {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: transparent;
+  color: #FFFFFF;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 11px 22px;
+  border: 1.5px solid #FFFFFF;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+.btn-secondary-light:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-1px);
+}
+.btn-secondary-light:active {
+  transform: translateY(1px);
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--card-shadow);
+  padding: 28px;
+  transition: var(--transition-smooth);
+}
+.card-hoverable:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* Status Tags styling */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.badge-approved {
+  background: #EBFBF5;
+  color: #009962;
+  border: 1px solid rgba(0, 204, 131, 0.15);
+}
+
+.badge-rejected {
+  background: #FFF0F2;
+  color: #E02424;
+  border: 1px solid rgba(224, 36, 36, 0.15);
+}
+
+.badge-partial {
+  background: #FFF8F0;
+  color: #D05B00;
+  border: 1px solid rgba(237, 137, 54, 0.15);
+}
+
+.badge-review {
+  background: #F0F6FC;
+  color: #1A73E8;
+  border: 1px solid rgba(26, 115, 232, 0.15);
+}
+
+.badge-awaiting {
+  background: #FFF8E1;
+  color: #E65100;
+  border: 1px solid rgba(230, 81, 0, 0.2);
+  animation: pulseAmber 2s infinite;
+}
+
+@keyframes pulseAmber {
+  0% {
+    box-shadow: 0 0 0 0 rgba(230, 81, 0, 0.25);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(230, 81, 0, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(230, 81, 0, 0);
+  }
+}
+
+/* Pulsing background for processing states */
+@keyframes pulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(63, 14, 45, 0.2);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(63, 14, 45, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(63, 14, 45, 0);
+  }
+}
+
+.pulse-button {
+  animation: pulseGlow 2s infinite;
+}
+
+/* Micro-animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}

@@ -1,0 +1,244 @@
+.registry {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.titleArea {
+  max-width: 600px;
+}
+
+.titleArea .badge {
+  background: var(--plum-berry-light);
+  color: var(--plum-berry);
+  margin-bottom: 12px;
+}
+
+.title {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.filterBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 24px;
+}
+
+.searchWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+  background: var(--plum-promise);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  transition: var(--transition-smooth);
+}
+
+.searchWrapper:focus-within {
+  border-color: var(--plum-berry);
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(63, 14, 45, 0.05);
+}
+
+.searchIcon {
+  font-size: 16px;
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  color: var(--plum-berry);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.filterWrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.filterLabel {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filterSelect {
+  background: #FFFFFF;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 10px 16px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--plum-berry);
+  outline: none;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+}
+
+.filterSelect:focus {
+  border-color: var(--plum-berry);
+}
+
+.tableCard {
+  padding: 0;
+  overflow: hidden;
+}
+
+.loading, .empty {
+  padding: 60px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 15px;
+}
+
+.tableResponsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.table th {
+  background: var(--plum-berry-light);
+  color: var(--plum-berry);
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.table td {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-light);
+  font-size: 14px;
+}
+
+.row {
+  transition: var(--transition-smooth);
+}
+
+.row:hover {
+  background: rgba(250, 246, 240, 0.4);
+}
+
+.row:last-child td {
+  border-bottom: none;
+}
+
+.timestamp {
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.memberCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.memberName {
+  font-weight: 700;
+  color: var(--plum-berry);
+}
+
+.memberId {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.categoryBadge {
+  background: var(--plum-promise);
+  color: var(--plum-berry);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--border-light);
+}
+
+.amount {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-secondary);
+}
+
+.approvedAmt {
+  color: var(--plum-mint-dark);
+}
+
+.latency {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.viewLink {
+  color: var(--plum-berry);
+  font-weight: 700;
+  font-size: 13px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.viewLink:hover {
+  color: var(--plum-berry-hover);
+  text-decoration: underline;
+}
+
+@media (max-width: 992px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .filterBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+}

@@ -1,0 +1,40 @@
+# Dependency directories
+node_modules/
+frontend/node_modules/
+backend/venv/
+backend/venv-uv/
+
+# Build and output directories
+.next/
+frontend/.next/
+out/
+frontend/out/
+build/
+frontend/build/
+
+# Local databases and runtime data
+backend/*.db
+backend/claims.db
+backend/uploads/
+uploads/
+
+# Environment files
+.env
+.env*.local
+backend/.env
+frontend/.env*
+
+# Testing and coverage
+.coverage
+backend/.coverage
+.pytest_cache/
+backend/.pytest_cache/
+frontend/coverage/
+
+# Python caching
+__pycache__/
+backend/**/__pycache__/
+*.pyc
+
+# System files
+.DS_Store
