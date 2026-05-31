@@ -24,7 +24,7 @@ The system is built as a fully decoupled, async-first application consisting of 
                           │                        │
          Enqueue Celery   │                        │ SQLAlchemy Async
          Task with        │                        │ (PostgreSQL/Supabase)
-         Local File Path  ▼                        ▼
+         URL/File Path    ▼                        ▼
                   ┌──────────────┐         ┌──────────────┐
                   │ Redis Broker │         │  Postgres DB │
                   │  & Locks     │         │  (Port 5432) │
@@ -150,11 +150,11 @@ To enable safe retries from the frontend, the claims route intercepts `X-Idempot
 - If present, returns the existing processed or pending claim record immediately.
 - If absent, registers the key in Redis with a 24-hour expiration (`ex=86400`) and begins processing.
 
-### 3. Celery Payload Optimization (Disk Storage)
+### 3. Celery Payload Optimization (Hybrid S3 & Local Storage)
 Standard Redis message brokers degrade when handling megabytes of base64-encoded file data.
-- **Route Interception**: The FastAPI route writes incoming document byte data to `uploads/{claim_id}/{file_id}_{file_name}`.
-- **Offloading**: Clears the heavy `base64_data` block, replacing it with a light `file_path` reference in the dictionary payload. This reduces Redis task payload size from megabytes to under 10KB.
-- **Worker Reloading**: The background worker reads the file from disk and re-injects the base64 bytes dynamically before executing OCR tasks.
+- **Route Interception**: The FastAPI route intercepts incoming base64 document files, decodes them, and attempts to upload them to S3-compatible cloud storage (such as AWS S3 or Supabase Storage). If credentials are not configured, it gracefully falls back to local disk storage (`uploads/`).
+- **Offloading**: Clears the heavy `base64_data` block from the payload, replacing it with the direct S3 URL or local filepath reference in `file_path`. This keeps the Redis task payload size under 10KB.
+- **Worker Retrieval**: When the background worker receives the task, it retrieves the document bytes using the universal storage helper. If the path is a remote URL (starting with `http://` or `https://`), it downloads the file dynamically into memory using `httpx`; if it's a local file, it reads it directly. This guarantees 100% cloud compatibility without requiring shared disk volumes between web servers and worker instances!
 
 ---
 
@@ -220,9 +220,9 @@ To scale the platform to process **10x to 100x load (up to 7.5 million claims an
 *   **Database Scaling**: Read-heavy queries (registry viewing, review lists) can be routed to database read replicas.
 *   **Write Paths**: Core write paths (pipeline updates) continue targeting primary database nodes. Connect via PgBouncer to manage high pooling volumes.
 
-### 4. Distributed Object Storage
-*   **Current File Path**: Relies on local filesystem shares.
-*   **Target State**: Re-route uploaded documents to an object store like AWS S3 or Google Cloud Storage (GCS). Store unsigned, short-lived secure URLs in the database payload, allowing distributed worker pods across multiple servers to download scans directly from the cloud bucket.
+### 4. Distributed Object Storage [COMPLETED]
+*   **Implementation Status**: Fully completed and integrated.
+*   **Mechanism**: System supports a plug-and-play S3-compatible hybrid storage system. When S3/Supabase storage credentials are provided, documents are dynamically uploaded to the cloud bucket and remote URLs are enqueued in Celery tasks. Distributed workers download remote assets on demand via HTTPX, achieving stateless horizontal scaling with zero shared disk requirements.
 
 ### 5. Policy Terms & Roster Caching
 *   **Cache Store**: Cache the member roster and policy configuration rules inside Redis.

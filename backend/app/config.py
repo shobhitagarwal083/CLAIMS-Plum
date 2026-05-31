@@ -82,6 +82,13 @@ class Settings(BaseSettings):
     upload_dir: str = "./uploads"
     max_file_size_mb: int = 20
 
+    # ── S3 Object Storage ─────────────────────────────────────────
+    s3_endpoint_url: Optional[str] = None  # e.g., Supabase/R2 endpoint
+    s3_access_key_id: Optional[str] = None
+    s3_secret_access_key: Optional[str] = None
+    s3_bucket_name: Optional[str] = None
+    s3_region: str = "us-east-1"
+
     # ── Policy ───────────────────────────────────────────────────
     policy_terms_path: str = "./policy_terms.json"
     test_cases_path: str = "./test_cases.json"

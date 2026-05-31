@@ -36,7 +36,7 @@ A production-grade, multi-agent health insurance claims adjudication platform wi
                           │                        │
          Enqueue Celery   │                        │ SQLAlchemy Async
          Task with        │                        │ (PostgreSQL/Supabase)
-         Local File Path  ▼                        ▼
+         URL/File Path    ▼                        ▼
                   ┌──────────────┐         ┌──────────────┐
                   │ Redis Broker │         │  Postgres DB │
                   │  & Locks     │         │  (Port 5432) │
@@ -56,63 +56,68 @@ A production-grade, multi-agent health insurance claims adjudication platform wi
 
 ### Prerequisites
 *   Node.js (v18+)
-*   Python (3.11 or 3.12 recommended)
 *   Docker & Docker Compose
+*   Python (3.11 or 3.12 recommended - *only required if running locally without Docker*)
 
-### 1. Database & Broker Setup (Docker)
-Start the PostgreSQL 15 and Redis containers in the root directory:
-```bash
-docker compose up -d
-```
-This boots:
-*   A Postgres database listening on `localhost:5432` (user/pass: `postgres/postgres`).
-*   A Redis broker listening on `localhost:6379`.
+### ⚡ Method A: Containerized Setup (Recommended)
+You can launch the entire backend stack (FastAPI server, Celery worker, PostgreSQL database, and Redis broker) in fully containerized mode with **a single command**:
 
-### 2. Backend Setup
-Navigate to the `backend/` directory:
-```bash
-cd backend
-```
+1. Create a `.env` configuration file in `backend/`:
+   ```bash
+   cp backend/.env.example backend/.env
+   ```
+2. Configure credentials in `backend/.env` (e.g., AI API keys, optional S3/Supabase keys).
+3. From the root directory, start the Docker Compose services:
+   ```bash
+   docker compose up --build -d
+   ```
+This boots all backend services with **hot-reloading enabled**. Any local edits you make to the backend code will instantly reflect inside the containers!
 
-Create a virtual environment and install dependencies:
-```bash
-# Recommended using uv for speed
-uv venv venv-uv --python 3.12
-source venv-uv/bin/activate
-uv pip install -r requirements.txt
-```
+---
 
-Create your `.env` configuration file:
-```bash
-cp .env.example .env
-```
-Open `.env` and configure your credentials (e.g., `GOOGLE_API_KEY`, `OPENAI_API_KEY`, etc.). The backend automatically detects active keys to set up your primary and fallback LLM clients.
+### 🪵 Method B: Local Python Environment Setup
+If you prefer running the Python servers directly on your machine instead of Docker:
 
-Launch the FastAPI application:
-```bash
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-```
-The server will start at `http://localhost:8000`. Database tables are automatically initialized on startup.
+1. **Start Database & Broker Setup (Docker)**
+   Start only PostgreSQL 15 and Redis containers:
+   ```bash
+   docker compose up db redis -d
+   ```
 
-### 3. Celery Worker Setup
-Open a new terminal window, navigate to the `backend/` directory, activate the virtual environment, and launch the Celery worker process:
-```bash
-cd backend
-source venv-uv/bin/activate
-python -m celery -A app.tasks.celery_app worker --loglevel=info
-```
+2. **Backend Setup**
+   Navigate to the `backend/` directory, create a virtual environment, and install dependencies:
+   ```bash
+   cd backend
+   uv venv venv-uv --python 3.12
+   source venv-uv/bin/activate
+   uv pip install -r requirements.txt
+   ```
+   Create your `.env` configuration file:
+   ```bash
+   cp .env.example .env
+   ```
+   Launch the FastAPI application:
+   ```bash
+   python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+3. **Celery Worker Setup**
+   Open a new terminal window, navigate to `backend/`, activate your venv, and run:
+   ```bash
+   source venv-uv/bin/activate
+   python -m celery -A app.tasks.celery_app worker --loglevel=info
+   ```
+
+---
 
 ### 4. Frontend Setup
-Navigate to the `frontend/` directory:
+Navigate to the `frontend/` directory, install dependencies, and start the development server:
 ```bash
-cd ../frontend
-```
-
-Install dependencies and start the development server:
-```bash
+cd frontend
 npm install
 npm run dev -- --port 3000
 ```
+Open `http://localhost:3000` in your web browser.
 Open `http://localhost:3000` in your web browser.
 
 ---

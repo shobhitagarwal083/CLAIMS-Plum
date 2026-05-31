@@ -150,17 +150,14 @@ async def run_async_process_claim(claim_id: str, request_data: dict[str, Any]):
                 
                 request_data["claims_history"] = list(combined_history.values())
 
-                # Restore base64_data from file_path if it was offloaded to disk
-                from pathlib import Path
+                # Restore base64_data from file_path (local or remote object storage URL)
                 import base64
+                from app.utils.storage import download_file_bytes
                 for doc in request_data.get("documents", []):
                     if doc.get("file_path") and not doc.get("base64_data"):
                         try:
-                            fp = Path(doc["file_path"])
-                            if fp.exists():
-                                doc["base64_data"] = base64.b64encode(fp.read_bytes()).decode("utf-8")
-                            else:
-                                logger.warning("Document file path %s does not exist on disk.", doc.get("file_path"))
+                            file_bytes = await download_file_bytes(doc["file_path"])
+                            doc["base64_data"] = base64.b64encode(file_bytes).decode("utf-8")
                         except Exception as load_err:
                             logger.error("Failed to load document from path %s: %s", doc.get("file_path"), load_err)
 

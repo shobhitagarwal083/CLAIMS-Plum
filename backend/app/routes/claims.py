@@ -136,10 +136,11 @@ async def submit_claim(
         db.add(record)
         await db.commit()
 
-        # Save documents' base64_data to disk to optimize Celery payload size
+        # Save documents to object storage (S3/Supabase) or local disk to optimize Celery payload size
         from pathlib import Path
         import base64
         from app.config import get_settings
+        from app.utils.storage import upload_file_to_s3
 
         settings = get_settings()
         upload_dir = Path(settings.upload_dir) / claim_id
@@ -154,18 +155,25 @@ async def submit_claim(
                     file_name = doc.get("file_name") or "file"
                     # Sanitized/safe filename format: {file_id}_{file_name}
                     safe_name = f"{file_id}_{Path(file_name).name}"
-                    file_path = upload_dir / safe_name
                     
                     # Strip mime prefix if present in base64
                     if "," in base64_data:
                         base64_data = base64_data.split(",", 1)[1]
                     file_bytes = base64.b64decode(base64_data)
-                    file_path.write_bytes(file_bytes)
                     
-                    doc["file_path"] = str(file_path.resolve())
+                    # Try to upload to S3 first
+                    s3_url = upload_file_to_s3(file_bytes, safe_name, claim_id)
+                    if s3_url:
+                        doc["file_path"] = s3_url
+                    else:
+                        # Fallback to local disk storage
+                        file_path = upload_dir / safe_name
+                        file_path.write_bytes(file_bytes)
+                        doc["file_path"] = str(file_path.resolve())
+                        
                     doc["base64_data"] = None
                 except Exception as save_err:
-                    logger.error("Failed to save document to disk: %s", save_err)
+                    logger.error("Failed to save document: %s", save_err)
 
         # 2. Dispatch background task
         process_claim_task.delay(claim_id, payload)
