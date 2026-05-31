@@ -60,10 +60,9 @@ def upload_file_to_s3(file_bytes: bytes, file_name: str, claim_id: str) -> Optio
         )
         
         if settings.s3_endpoint_url:
-            # Standard construct for Supabase / custom S3 endpoints
-            # Supabase Storage public URL structure: endpoint_url / bucket_name / s3_key
-            # E.g. endpoint_url = https://[ref].supabase.co/storage/v1/s3
-            url = f"{settings.s3_endpoint_url}/{settings.s3_bucket_name}/{s3_key}"
+            # Convert /s3 endpoint to /object/public endpoint for public GET requests
+            base_url = settings.s3_endpoint_url.replace('/s3', '/object/public')
+            url = f"{base_url}/{settings.s3_bucket_name}/{s3_key}"
         else:
             url = f"https://{settings.s3_bucket_name}.s3.{settings.s3_region}.amazonaws.com/{s3_key}"
             
