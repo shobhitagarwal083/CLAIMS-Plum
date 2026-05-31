@@ -176,7 +176,7 @@ async def run_async_process_claim(claim_id: str, request_data: dict[str, Any]):
                 record.confidence_score = output.confidence_score
                 record.rejection_reasons = output.rejection_reasons
                 record.decision_reasons = output.decision_reasons
-                record.amount_breakdown = output.amount_breakdown.model_dump() if output.amount_breakdown else None
+                record.amount_breakdown = output.amount_breakdown.model_dump(mode='json') if output.amount_breakdown else None
                 record.document_issues = output.document_issues
                 record.fraud_signals = output.fraud_signals
                 record.fraud_score = output.fraud_score
