@@ -422,14 +422,15 @@ Handles background execution of the multi-agent pipeline using Celery and Redis.
 def process_claim_task(claim_id: str, request_data: dict[str, Any]) -> None: ...
 ```
 
-### Key Execution Contracts
+### Key Execution & Serialization Contracts
 1. **Distributed Concurrency Lock**: Prior to processing, the worker attempts to acquire a lock in Redis using the key:
    `claim_lock:{member_id}:{treatment_date}:{claim_category}`
    - Timeout: `120s`, blocking timeout: `5s`.
    - If the lock is not acquired, the claim is rejected with `status = "failed"` and the reason is recorded as concurrent submission.
 2. **Dynamic Database History Merging**: The worker queries the `claims` table for any past claims matching `member_id` (excluding the current `claim_id`) and combines them with `claims_history` in the request payload to ensure accurate rate-limit checks.
 3. **Payload Optimization (Disk Loading)**: Inspects document records. If `file_path` is present and `base64_data` is null, reads the file from local disk and encodes it back to base64 before executing the pipeline.
-4. **Lifecycle Loop Resolution**: Runs inside `asyncio.run()`. Connection pools and async engines are disposed at completion by calling `await close_db()` in a `finally` block to prevent loop mismatch crashes.
+4. **Resilient JSON Serialization Contract**: To avoid SQL parameter formatting errors due to non-serializable objects (like `Decimal` objects in amount breakdowns or execution trace maps), the worker **must** serialize intermediate schemas via `model_dump(mode='json')` before passing them to SQLAlchemy JSON columns. This forces all float/decimal properties to convert to standard float/string primitives.
+5. **Lifecycle Loop Resolution**: Runs inside `asyncio.run()`. Connection pools and async engines are disposed at completion by calling `await close_db()` in a `finally` block to prevent loop mismatch crashes.
 
 ---
 
@@ -442,11 +443,14 @@ def process_claim_task(claim_id: str, request_data: dict[str, Any]) -> None: ...
     1. Check Redis for `idempotency:{key}`.
     2. If key exists, retrieve the claim ID, fetch the record from the database, and return it.
     3. If key doesn't exist, store the key-value pair in Redis with a 24-hour expiration (`ex=86400`) and proceed.
-  - **Offloading**: Extracts base64 document contents and writes them to local folders `uploads/{claim_id}/{file_id}_{file_name}`, clearing `base64_data` and populating `file_path` before dispatching Celery tasks.
+  - **Offloading & Storage Configuration**: Extracts base64 document contents and uploads them to the configured object storage.
+    - If Supabase S3 is used, the boto3 client region **must** be configured as `us-east-1` (signature requirement) while the endpoint points to the target Supabase host.
+    - Clears `base64_data` and populates `file_path` with the S3 URL or local filepath before dispatching Celery tasks.
   - **Status Code**: `202 Accepted`.
   - **Response**: Returns a shell of the record in `pending` state.
 - **GET `/api/claims`**: Returns a list of all claim records in the database.
 - **GET `/api/claims/{claim_id}`**: Returns full details and trace summary logs for a specific claim.
+  - **Client Polling Contract**: Next.js client pages polling this route at a 2-second interval must enforce a ref-based request checker to avoid issuing overlapping asynchronous requests when responses are delayed.
 
 ### 2. Review Routes (`/api/reviews`)
 - **GET `/api/reviews`**: Lists all claims currently in `awaiting_review` state.
@@ -461,3 +465,4 @@ def process_claim_task(claim_id: str, request_data: dict[str, Any]) -> None: ...
     }
     ```
   - **Validation**: If `action == "approve"`, overrides approved amount if provided (verifies it does not exceed `claimed_amount`), restores decision to `pre_review_decision` (or default `APPROVED`), and sets status to `completed`. If `action == "deny"`, sets decision to `REJECTED`, approved amount to `0.0`, and sets status to `completed`.
+

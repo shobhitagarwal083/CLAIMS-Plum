@@ -111,7 +111,7 @@ class BaseAgent(ABC):
 
 ---
 
-## 💾 Database Schemas
+## 💾 Database Schemas & Serialization Resiliency
 
 We use **SQLAlchemy Async** mapped onto a PostgreSQL database (local Docker or Supabase Cloud).
 
@@ -124,8 +124,8 @@ We use **SQLAlchemy Async** mapped onto a PostgreSQL database (local Docker or S
 *   `confidence_score` (FLOAT).
 *   `is_document_error` (BOOLEAN).
 *   `rejection_reasons`, `decision_reasons`, `document_issues`, `fraud_signals`, `degraded_components` (JSONB / Array).
-*   `amount_breakdown` (JSONB): Invoice receipt breakdown.
-*   `execution_trace` (JSONB): Direct serialization of the 7-Agent execution details.
+*   `amount_breakdown` (JSON): Invoice receipt breakdown containing mathematical sub-limit, copay, and discount items.
+*   `execution_trace` (JSON): Complete trace log records of all 7 pipeline agents.
 *   **Decision Gate Columns**:
     - `review_action` (VARCHAR): `approved` | `denied` | NULL.
     - `reviewed_by` (VARCHAR): Auditor name.
@@ -133,6 +133,11 @@ We use **SQLAlchemy Async** mapped onto a PostgreSQL database (local Docker or S
     - `review_notes` (VARCHAR): Mandatory notes.
     - `pre_review_decision` (VARCHAR): Stashed pipeline decision.
     - `pre_review_approved_amount` (NUMERIC(12,2)): Stashed pipeline calculation.
+
+### ⚠️ Depth Analysis: Decimal Serialization & Session Integrity
+PostgreSQL JSON/JSONB fields are represented as Python dictionaries or lists inside SQLAlchemy. By default, SQLAlchemy delegates JSON serialization to Python's standard `json` module. Because `json.dumps()` is strictly designed for JSON types (dict, list, str, int, float, bool, None), it raises a `TypeError` if it encounters a Python `Decimal` object (which is commonly returned from precision financial classes like `AmountBreakdown` or agents tracing monetary values). 
+* **The Failure Mode:** When the pipeline ran successfully and the Celery task attempted to execute `await db.commit()`, the default JSON engine encountered `Decimal` objects buried inside the `execution_trace` array or `amount_breakdown` dictionary, raising a `StatementError`. The SQLAlchemy database session transaction was automatically marked as dirty/inactive and rolled back. Subsequent task error-handling blocks attempting to write `status="failed"` failed as well because the session transaction was already aborted, leaving the database state stuck in `"processing"`.
+* **The Resiliency Fix:** Implemented recursive JSON-compatible type coercion by calling `.model_dump(mode='json')` on Pydantic schemas before saving them. This recursively casts all `Decimal` values to JSON-safe float primitives, resolving database-level transaction lockups.
 
 ---
 
@@ -150,11 +155,13 @@ To enable safe retries from the frontend, the claims route intercepts `X-Idempot
 - If present, returns the existing processed or pending claim record immediately.
 - If absent, registers the key in Redis with a 24-hour expiration (`ex=86400`) and begins processing.
 
-### 3. Celery Payload Optimization (Hybrid S3 & Local Storage)
+### 3. Celery Payload Optimization & Supabase S3 Regional Signatures
 Standard Redis message brokers degrade when handling megabytes of base64-encoded file data.
 - **Route Interception**: The FastAPI route intercepts incoming base64 document files, decodes them, and attempts to upload them to S3-compatible cloud storage (such as AWS S3 or Supabase Storage). If credentials are not configured, it gracefully falls back to local disk storage (`uploads/`).
 - **Offloading**: Clears the heavy `base64_data` block from the payload, replacing it with the direct S3 URL or local filepath reference in `file_path`. This keeps the Redis task payload size under 10KB.
 - **Worker Retrieval**: When the background worker receives the task, it retrieves the document bytes using the universal storage helper. If the path is a remote URL (starting with `http://` or `https://`), it downloads the file dynamically into memory using `httpx`; if it's a local file, it reads it directly. This guarantees 100% cloud compatibility without requiring shared disk volumes between web servers and worker instances!
+- **S3 Signature Resolution:** Supabase Storage exposes an S3-compatible API gateway. Under AWS Signature Version 4, request signatures are constructed using the target region. Because Supabase's S3-compliant gateway only supports the `us-east-1` region for signing requests, configuring `S3_REGION=ap-south-1` caused signature verification failures (`403 Forbidden`). We forced the storage driver client region to default to `us-east-1` while pointing to the Supabase endpoint URL, allowing secure upload and download signatures to succeed.
+
 
 ---
 

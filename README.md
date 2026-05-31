@@ -137,6 +137,27 @@ npm install
 npm run dev -- --port 3000
 ```
 Open `http://localhost:3000` in your web browser.
+---
+
+## 🛠️ Production Resiliency & Diagnostics (Lessons Learned)
+
+During deployment and scaling, three critical system constraints were uncovered and successfully engineered:
+
+### 1. Supabase S3 Region Signature Quirk
+* **The Problem:** Supabase Storage exposes an S3-compatible API. However, its request signing gateway strictly mandates the `us-east-1` region for creating AWS Signature Version 4 payloads. Setting `S3_REGION=ap-south-1` caused boto3 to generate signature headers using a region mismatch key, returning `403 Forbidden` errors during document downloads in the Celery worker task.
+* **The Resolution:** Enforced `S3_REGION=us-east-1` in the backend environment variables while maintaining the primary custom Supabase storage endpoint URL. The background storage utility now generates correct signature blocks that are accepted globally.
+
+### 2. Decimal JSON Serialization Crash (PostgreSQL/SQLAlchemy)
+* **The Problem:** The `ClaimAdjudicator` agent returns high-precision currency values as Python `Decimal` objects (e.g. `sub_limit: Decimal('2000')`). When writing the final pipeline trace logs (`execution_trace`) and financial details (`amount_breakdown`) to the database, SQLAlchemy attempted to serialize these nested dictionaries using the native `json` encoder of python (via `json.dumps`), which does not support Decimal types. This threw a:
+  ```python
+  sqlalchemy.exc.StatementError: (builtins.TypeError) Object of type Decimal is not JSON serializable
+  ```
+  This crashed the worker transaction. Because the transaction aborted mid-way, the claim status remained stuck in `"processing"`, causing the frontend page to load indefinitely.
+* **The Resolution:** Updated the database save routines in `worker.py` and `claim_service.py` to serialize schemas using `model_dump(mode='json')`. This recursively scans all dictionaries and converts `Decimal` objects into floats/strings prior to SQL transaction commits.
+
+### 3. Frontend Polling Race Conditions
+* **The Problem:** If a claim was taking longer to process (e.g., due to document OCR extraction overhead), the frontend page polled `GET /api/claims/[id]` every 2 seconds. In high-latency situations, polling interval ticks fired overlapping request threads, leading to race conditions that locked up the page's React state and caused infinite loading spinners even after the worker finished.
+* **The Resolution:** Introduced a reference-tracked request state (`prev` and `active` fetch references). The polling interval now checks if a request is actively in-flight and will skip ticks until it receives a response, resolving frontend race conditions.
 
 ---
 
@@ -160,3 +181,4 @@ python test_eval.py
 **Expected Outcome**: `Final Score: 20/20 (Pass Rate 100%)`.
 
 Alternatively, navigate to the **Evaluation Suite** (`/eval`) on the Next.js frontend to run and inspect all 20 test case execution traces inline in real-time.
+

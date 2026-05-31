@@ -54,3 +54,10 @@ services:
       - redis
     restart: unless-stopped
     command: python -m celery -A app.tasks.celery_app worker --loglevel=info
+
+networks:
+  default:
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: fd00:1::/64
