@@ -4,7 +4,7 @@ Unified AI Model Client.
 Multi-provider client supporting Google Gemini and OpenAI with automatic
 failover, retry logic, and structured output handling.
 
-Ported from the SuperNodes ai_common/model_client.py pattern but simplified
+Simplified
 for the claims processing use case. Supports both text and vision (multi-modal)
 requests needed for document OCR.
 """

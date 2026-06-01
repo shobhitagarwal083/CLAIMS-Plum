@@ -1,7 +1,6 @@
 """
 Agent 3: Document Parser (OCR + Structured Extraction).
 
-Combines the OCR Node and Information Extractor Node patterns from SuperNodes.
 For each classified document, extracts structured data according to
 document-type-specific schemas.
 

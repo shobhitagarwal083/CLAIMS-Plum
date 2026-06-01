@@ -1,7 +1,6 @@
 """
 Retry Handler with Exponential Backoff.
 
-Ported from the SuperNodes production platform (ai_common/retry_handler.py).
 Handles transient failures (rate limits, timeouts, network errors) with
 exponential backoff + jitter to prevent thundering herd.
 """

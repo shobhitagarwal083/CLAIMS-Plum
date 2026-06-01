@@ -1,7 +1,7 @@
 """
 Pipeline Executor — Main Orchestrator.
 
-Mirrors the executor.py pattern from the SuperNodes platform. Orchestrates
+Orchestrates
 all 7 agents in sequence, handling early exits, graceful degradation,
 and building the final ClaimDecisionOutput.
 

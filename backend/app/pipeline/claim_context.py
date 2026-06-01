@@ -1,7 +1,6 @@
 """
 Claim Context — In-Memory Pipeline State.
 
-Mirrors the ExecutionContext pattern from the SuperNodes platform.
 Holds all state for a single claim processing run:
 - Input data
 - Agent results (ordered)

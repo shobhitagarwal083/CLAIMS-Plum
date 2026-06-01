@@ -7,8 +7,6 @@ and confidence scores.
 
 This directly addresses the Observability (20%) evaluation criterion:
 "Can we reconstruct exactly why any claim got any decision just from the trace?"
-
-Inspired by ExecutionContext and NodeExecutionResult from the SuperNodes platform.
 """
 
 from __future__ import annotations
@@ -58,7 +56,6 @@ class AgentTraceEntry(BaseModel):
     """
     Complete execution record for one agent in the pipeline.
     
-    Mirrors NodeExecutionResult from the SuperNodes platform.
     An ordered list of these constitutes the full execution trace.
     """
     trace_id: str = Field(default_factory=lambda: str(uuid4()))

@@ -2,7 +2,6 @@
 Agent 7: Fraud Detector.
 
 Evaluates fraud signals based on claim patterns and policy thresholds.
-Modeled after the SuperNodes fraud_detection_node.
 
 Handles TC009: 4th same-day claim → MANUAL_REVIEW with specific signals.
 
